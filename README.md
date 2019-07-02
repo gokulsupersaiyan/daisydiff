@@ -4,5 +4,5 @@
 
 ./gradle build
 
-docker run --rm -v "$PWD/build/docker":/var/task lambci/lambda:java8 fw.DiffHandler '{"source": "source", "destination": "destination"}'
+docker run --rm -v "$PWD/build/docker":/var/task lambci/lambda:java8 fw.DiffHandler '{"source": "https://google.com", "destination": "https://facebook.com"}'
 ```

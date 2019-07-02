@@ -28,7 +28,11 @@ public class DiffHandler implements RequestHandler<DiffHandler.RequestClass, Dif
     @Override
     public ResponseClass handleRequest(RequestClass input, Context context) {
         ResponseClass responseClass = new ResponseClass();
-        responseClass.result = " Result :: " + input.source  + "" + input.destination;
+        try {
+            responseClass.result = diff(new String[] { input.source, input.destination });
+        }catch (Exception e){
+           e.printStackTrace();
+        }
         return responseClass;
     }
 
@@ -42,29 +46,22 @@ public class DiffHandler implements RequestHandler<DiffHandler.RequestClass, Dif
         public String result;
     }
 
-    public static void main(String[] args) throws Exception {
-        mainDemo(new String[] {"sample/example1.htm","sample/example2.htm" });
-    }
-
 
     static boolean quietMode = false;
 
-    public static void mainDemo(String[] var0) throws URISyntaxException {
+    public static String diff(String[] var0) throws URISyntaxException {
         if (var0.length < 2) {
             help();
         }
 
         boolean var1 = true;
         boolean var2 = true;
-        String var3 = "daisydiff.htm";
         String[] var4 = new String[0];
 
         try {
             for(int var5 = 2; var5 < var0.length; ++var5) {
                 String[] var6 = var0[var5].split("=");
-                if (var6[0].equalsIgnoreCase("--file")) {
-                    var3 = var6[1];
-                } else if (var6[0].equalsIgnoreCase("--type")) {
+                if (var6[0].equalsIgnoreCase("--type")) {
                     if (var6[1].equalsIgnoreCase("tag")) {
                         var1 = false;
                     }
@@ -99,8 +96,6 @@ public class DiffHandler implements RequestHandler<DiffHandler.RequestClass, Dif
                 } else {
                     System.out.println("Diff type: tag");
                 }
-
-                System.out.println("Writing " + (var2 ? "html" : "xml") + " output to " + var3);
             }
 
             if (var4.length > 0) {
@@ -124,16 +119,18 @@ public class DiffHandler implements RequestHandler<DiffHandler.RequestClass, Dif
 
             SAXTransformerFactory var24 = (SAXTransformerFactory)TransformerFactory.newInstance();
             TransformerHandler var26 = var24.newTransformerHandler();
-            var26.setResult(new StreamResult(new File(var3)));
+            StringWriter writer = new StringWriter();
+            StreamResult result = new StreamResult(writer);
+            var26.setResult(result);
             Object var27;
-            if (var0[0].startsWith("http://")) {
+            if (var0[0].startsWith("http://") || var0[0].startsWith("https://")) {
                 var27 = (new URI(var0[0])).toURL().openStream();
             } else {
                 var27 = new FileInputStream(var0[0]);
             }
 
             Object var28;
-            if (var0[1].startsWith("http://")) {
+            if (var0[1].startsWith("http://") || var0[1].startsWith("https://")) {
                 var28 = (new URI(var0[1])).toURL().openStream();
             } else {
                 var28 = new FileInputStream(var0[1]);
@@ -179,6 +176,7 @@ public class DiffHandler implements RequestHandler<DiffHandler.RequestClass, Dif
                 ((ContentHandler)var10).endElement("", "diffreport", "diffreport");
                 ((ContentHandler)var10).endDocument();
             }
+            return writer.toString();
         } catch (Throwable var22) {
             if (quietMode) {
                 System.out.println(var22);
@@ -201,6 +199,7 @@ public class DiffHandler implements RequestHandler<DiffHandler.RequestClass, Dif
         } else {
             System.out.println("done");
         }
+        return  "error";
 
     }
 
