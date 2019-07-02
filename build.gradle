@@ -1,9 +1,28 @@
+import jp.classmethod.aws.gradle.lambda.AWSLambdaUpdateFunctionCodeTask
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+
+    dependencies {
+        classpath "jp.classmethod.aws:gradle-aws-plugin:0.30"
+    }
+}
+
+
 plugins {
     id 'java'
 }
 
+
 group 'daisy-diff'
 version '1.0-SNAPSHOT'
+
+apply plugin: 'jp.classmethod.aws'
+apply plugin: 'base'
+apply plugin: 'jp.classmethod.aws.lambda'
 
 sourceCompatibility = 1.8
 
@@ -19,25 +38,43 @@ dependencies {
 }
 
 
-task fatJar(type: Jar) {
-    manifest {
-        attributes 'Implementation-Title': 'Daisy Diff Jar',
-                'Implementation-Version': version,
-                'Main-Class': 'fw.Main'
+task buildZip(type: Zip) {
+    from compileJava
+    from processResources
+    into('lib') {
+        from configurations.runtime
     }
-    baseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
 }
 
 
-task buildZip(type: Zip) {
+task buildDocker(type: Copy) {
     group('build')
     from compileJava
     from processResources
     into('lib') {
         from configurations.compileClasspath
     }
+
+    into 'build/docker'
 }
 
+
+build.dependsOn buildDocker
 build.dependsOn buildZip
+
+
+//AWS tasks
+aws {
+    profileName = "default"
+    region = "ap-northeast-1"
+}
+
+lambda {
+    region = "us-east-1"
+}
+
+
+task updateLambdaFunctionCode(type: AWSLambdaUpdateFunctionCodeTask) {
+    functionName = "fooBar"
+    zipFile = buildZip.archivePath
+}

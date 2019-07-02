@@ -1,6 +1,7 @@
 package fw;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.outerj.daisy.diff.DaisyDiff;
 import org.outerj.daisy.diff.HtmlCleaner;
 import org.outerj.daisy.diff.XslFilter;
@@ -22,21 +23,23 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Locale;
 
-public class Main {
+public class DiffHandler implements RequestHandler<DiffHandler.RequestClass, DiffHandler.ResponseClass> {
+
+    @Override
+    public ResponseClass handleRequest(RequestClass input, Context context) {
+        ResponseClass responseClass = new ResponseClass();
+        responseClass.result = " Result :: " + input.source  + "" + input.destination;
+        return responseClass;
+    }
 
     public static class RequestClass {
-        public String name;
+        public String source;
+        public String destination;
     }
 
 
     public static class ResponseClass {
-        public String name;
-    }
-
-    public static ResponseClass hello(RequestClass request, Context context) {
-        ResponseClass responseClass = new ResponseClass();
-        responseClass.name = request.name == null || request.name.trim().isEmpty() ? "empty String" : request.name;
-        return responseClass;
+        public String result;
     }
 
     public static void main(String[] args) throws Exception {
